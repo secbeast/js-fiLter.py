@@ -6,10 +6,9 @@ import json
 import csv
 import logging
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# Configure logging to stderr to avoid interfering with stdout
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', stream=sys.stderr)
 
-# Banner and Tool Info
 banner = """
      ██╗███████╗    ███████╗██╗██╗     ████████╗███████╗██████╗
      ██║██╔════╝    ██╔════╝██║██║     ╚══██╔══╝██╔════╝██╔══██╗
@@ -17,15 +16,14 @@ banner = """
 ██   ██║╚════██║    ██╔══╝  ██║██║        ██║   ██╔══╝  ██╔══██╗
 ╚█████╔╝███████║    ██║     ██║███████╗   ██║   ███████╗██║  ██║
  ╚════╝ ╚══════╝    ╚═╝     ╚═╝╚══════╝   ╚═╝   ╚══════╝╚═╝  ╚═╝
-                    Code by SecBeast
+            [Code by SecBeast]  [Version 1.0]
+             [Defronix Student DCSP BATCH-3]
 """
 
-# Function to display the banner first
 def show_banner():
-    print(banner)
+    print(banner, file=sys.stderr)  # Print banner to stderr
 
-# Function to extract and filter URLs
-def extract_js(input_file, js_output_file, filter_pattern=None, verbose=False, output_format='text'):
+def extract_js(input_file, filter_pattern=None, verbose=False):
     try:
         with open(input_file, 'r') as file:
             lines = file.readlines()
@@ -46,39 +44,52 @@ def extract_js(input_file, js_output_file, filter_pattern=None, verbose=False, o
                 js_urls.append(js_url)
                 if verbose:
                     logging.info(f"Extracted URL: {js_url}")
+    return js_urls
 
+def output_urls(js_urls, output_format):
     if output_format == 'json':
-        with open(js_output_file, 'w') as js_file:
-            json.dump({"urls": js_urls}, js_file, indent=4)
+        print(json.dumps({"urls": js_urls}, indent=4))
     elif output_format == 'csv':
-        with open(js_output_file, 'w', newline='') as js_file:
-            writer = csv.writer(js_file)
-            writer.writerow(["URL"])  # Header
-            for url in js_urls:
-                writer.writerow([url])
+        writer = csv.writer(sys.stdout)
+        writer.writerow(["URL"])
+        for url in js_urls:
+            writer.writerow([url])
     else:  # Default to text format
-        with open(js_output_file, 'w') as js_file:
-            for url in js_urls:
-                js_file.write(url + '\n')
+        for url in js_urls:
+            print(url)
 
-    if verbose:
-        logging.info(f"Extracted {len(js_urls)} .js URLs")
-        logging.info(f"Saved to '{js_output_file}'")
-
-# Main Function
 def main():
     show_banner()
 
     parser = argparse.ArgumentParser(description="Pure.js Extractor", epilog="Code by SecBeast")
     parser.add_argument('-i', '--input_file', required=True, help="Path to the input file containing URLs.")
-    parser.add_argument('-js', '--js_output', required=True, help="Path to the output file for .js URLs.")
+    parser.add_argument('-js', '--js_output', help="Optional: Save URLs to a file instead of stdout.")
     parser.add_argument('-f', '--filter', help="Filter for URLs containing a specific pattern.")
     parser.add_argument('-v', '--verbose', action='store_true', help="Enable verbose output.")
-    parser.add_argument('-o', '--output_format', choices=['text', 'json', 'csv'], default='text', help="Output format (text, json, or csv).")
+    parser.add_argument('-o', '--output_format', choices=['text', 'json', 'csv'], default='text', help="Output format.")
 
     args = parser.parse_args()
 
-    extract_js(args.input_file, args.js_output, args.filter, args.verbose, args.output_format)
+    js_urls = extract_js(args.input_file, args.filter, args.verbose)
+
+    if args.js_output:
+        # Save to file
+        with open(args.js_output, 'w') as f:
+            if args.output_format == 'json':
+                json.dump({"urls": js_urls}, f, indent=4)
+            elif args.output_format == 'csv':
+                writer = csv.writer(f)
+                writer.writerow(["URL"])
+                for url in js_urls:
+                    writer.writerow([url])
+            else:
+                for url in js_urls:
+                    f.write(url + '\n')
+        if args.verbose:
+            logging.info(f"URLs saved to {args.js_output}")
+    else:
+        # Print to stdout for piping
+        output_urls(js_urls, args.output_format)
 
 if __name__ == "__main__":
     main()
