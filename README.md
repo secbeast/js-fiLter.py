@@ -18,9 +18,7 @@ pip install -r requirements.txt  # If there are any dependencies
 Usage
 Run the script with the following options:
 
-bash
-Copy
-Edit
+
 python3 js-fiLter.py -i input.txt -js output.txt -f example.com -v
 Arguments:
 Flag	Description
@@ -31,21 +29,14 @@ Flag	Description
 Example Usage:
 Extract JavaScript files and save to jsfiles.txt:
 
-bash
-Copy
-Edit
 python3 js-fiLter.py -i urls.txt -js jsfiles.txt
 Extract .js URLs containing example.com and enable verbose mode:
 
-bash
-Copy
-Edit
 python3 js-fiLter.py -i urls.txt -js jsfiles.txt -f example.com -v
 Extract JavaScript files and pass them to mantra for further processing:
 
-bash
-Copy
-Edit
+## Use With MANTRA TOOL
+
 python3 js-fiLter.py -i input.txt | mantra -d -
 Output
 The extracted .js URLs are saved to the specified output file, making it easy for further processing.
